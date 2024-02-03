@@ -458,7 +458,6 @@ func writeTableData(db *sql.DB, table string, buf *bufio.Writer, perDataNumber i
 		return err
 	}
 
-	var values [][]interface{}
 	rowId := 0
 
 	for lineRows.Next() {
@@ -489,7 +488,6 @@ func writeTableData(db *sql.DB, table string, buf *bufio.Writer, perDataNumber i
 		ssql += "(" + rowString + ")"
 		rowId += 1
 		buf.WriteString(ssql)
-		values = append(values, row)
 	}
 	buf.WriteString(";\n")
 	buf.WriteString(fmt.Sprintf("/*!40000 ALTER TABLE `%s` ENABLE KEYS */;\n", table))
@@ -511,13 +509,13 @@ func buildRowData(row []interface{}, columnTypes []*sql.ColumnType) (ssql string
 			switch Type {
 			case "TINYINT", "SMALLINT", "MEDIUMINT", "INT", "INTEGER", "BIGINT":
 				if bs, ok := col.([]byte); ok {
-					ssql += fmt.Sprintf("%s", string(bs))
+					ssql += string(bs)
 				} else {
 					ssql += fmt.Sprintf("%d", col)
 				}
 			case "FLOAT", "DOUBLE":
 				if bs, ok := col.([]byte); ok {
-					ssql += fmt.Sprintf("%s", string(bs))
+					ssql += string(bs)
 				} else {
 					ssql += fmt.Sprintf("%f", col)
 				}
@@ -553,7 +551,7 @@ func buildRowData(row []interface{}, columnTypes []*sql.ColumnType) (ssql string
 				if !ok {
 					return "", err
 				}
-				ssql += fmt.Sprintf("%s", string(t))
+				ssql += string(t)
 			case "CHAR", "VARCHAR", "TINYTEXT", "TEXT", "MEDIUMTEXT", "LONGTEXT":
 				r := strings.NewReplacer("\n", "\\n", "'", "\\'", "\r", "\\r", "\"", "\\\"")
 				ssql += fmt.Sprintf("'%s'", r.Replace(fmt.Sprintf("%s", col)))
