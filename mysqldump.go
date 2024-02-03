@@ -35,6 +35,8 @@ type dumpOption struct {
 	isDropTable bool
 	// 是否增加选库脚本，多库导出时，此设置默认开启
 	isUseDb bool
+	// 导出视图
+	enableView bool
 
 	//批量插入，提高导出效率
 	perDataNumber int
@@ -81,6 +83,13 @@ func WithAllDatabases() DumpOption {
 func WithUseDb() DumpOption {
 	return func(option *dumpOption) {
 		option.isUseDb = true
+	}
+}
+
+// 导出视图
+func WithView() DumpOption {
+	return func(option *dumpOption) {
+		option.enableView = true
 	}
 }
 
@@ -286,7 +295,9 @@ func Dump(dns string, opts ...DumpOption) error {
 					return err
 				}
 			}
-			if tt == "VIEW" {
+			// 若表不存在，恢复视图时会报错
+			// TODO: 缓存视图结构直到所有表导出完毕再导出视图
+			if tt == "VIEW" && o.enableView {
 				// 删除视图
 				if o.isDropTable {
 					buf.WriteString(fmt.Sprintf("DROP VIEW IF EXISTS  `%s`;\n", table))
